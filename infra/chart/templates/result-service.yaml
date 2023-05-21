@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "voting-app-chart.fullname" . }}-result
+  labels:
+    app: result
+  {{- include "voting-app-chart.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.result.type }}
+  selector:
+    app: result
+  {{- include "voting-app-chart.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.result.ports | toYaml | nindent 2 -}}

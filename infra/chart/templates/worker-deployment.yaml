@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "voting-app-chart.fullname" . }}-worker
+  labels:
+    app: worker
+  {{- include "voting-app-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app: worker
+    {{- include "voting-app-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: worker
+      {{- include "voting-app-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.worker.worker.image.repository }}:{{ .Values.worker.worker.image.tag
+          | default .Chart.AppVersion }}
+        name: worker
+        resources: {}

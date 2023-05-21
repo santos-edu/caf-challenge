@@ -1,0 +1,56 @@
+db:
+  ports:
+  - name: db-service
+    port: 5432
+    targetPort: 5432
+  postgres:
+    env:
+      postgresPassword: postgres
+      postgresUser: postgres
+    image:
+      repository: postgres
+      tag: 15-alpine
+  replicas: 1
+  type: ClusterIP
+kubernetesClusterDomain: cluster.local
+redis:
+  ports:
+  - name: redis-service
+    port: 6379
+    targetPort: 6379
+  redis:
+    image:
+      repository: redis
+      tag: alpine
+  replicas: 1
+  type: ClusterIP
+result:
+  ports:
+  - name: result-service
+    nodePort: 31001
+    port: 5001
+    targetPort: 80
+  replicas: 1
+  result:
+    image:
+      repository: dockersamples/examplevotingapp_result
+      tag: latest
+  type: LoadBalancer
+vote:
+  ports:
+  - name: vote-service
+    nodePort: 31000
+    port: 5000
+    targetPort: 80
+  replicas: 1
+  type: LoadBalancer
+  vote:
+    image:
+      repository: dockersamples/examplevotingapp_vote
+      tag: latest
+worker:
+  replicas: 1
+  worker:
+    image:
+      repository: dockersamples/examplevotingapp_worker
+      tag: latest
