@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'develop'
     paths:
       - 'app/vote/**'
       - '.github/workflows/call-docker-build-vote.yaml'
