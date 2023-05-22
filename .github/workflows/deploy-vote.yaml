@@ -1,0 +1,70 @@
+name: Build Vote
+on:
+  push:
+    branches:
+      - 'main'
+      - 'develop'
+    paths:
+      - 'app/vote/**'
+      - '.github/workflows/call-docker-build-vote.yaml'
+
+env:
+  NAMESPACE: voting-app
+  APP_NAME: vote
+  ECR_REGISTRY: public.ecr.aws/p0x1d2p4
+
+jobs:
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        registry-type: public
+    - name: Generate tag
+      id: tag
+      run: echo "tag=$(date +%s)" >> $GITHUB_OUTPUT
+    - name: Build, tag, and push image to Amazon ECR
+      id: push
+      env:
+        ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+        IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        AWS_DEFAULT_REGION: us-east-1
+      run: |
+        cd app/$APP_NAME 
+        docker build -t $ECR_REGISTRY/$APP_NAME:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$APP_NAME:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$APP_NAME:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set Kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.25.9'
+    - name: Deployment on Kubernetes
+      env:
+        IMAGE: ${{needs.build.outputs.image}}
+      run: |
+        kubectl -n $NAMESPACE set image deployment/caf-voting-app-chart-$APP_NAME  $APP_NAME=${{ env.IMAGE }}
+        kubectl -n $NAMESPACE wait pods -l app=$APP_NAME --for condition=Ready --timeout=90s

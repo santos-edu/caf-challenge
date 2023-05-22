@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "voting-app-chart.fullname" . }}-db
+  labels:
+    app: db
+  {{- include "voting-app-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.db.replicas }}
+  selector:
+    matchLabels:
+      app: db
+    {{- include "voting-app-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: db
+      {{- include "voting-app-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_USER
+          value: {{ quote .Values.db.postgres.env.postgresUser }}
+        - name: POSTGRES_PASSWORD
+          value: {{ quote .Values.db.postgres.env.postgresPassword }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.db.postgres.image.repository }}:{{ .Values.db.postgres.image.tag
+          | default .Chart.AppVersion }}
+        name: postgres
+        ports:
+        - containerPort: 5432
+          name: postgres
+        resources: {}
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: db-data
+      volumes:
+      - emptyDir: {}
+        name: db-data
