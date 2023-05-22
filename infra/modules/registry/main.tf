@@ -1,14 +1,12 @@
 locals {
-  tags = {
-    Terraform = true
-  }
+  tags = merge(var.tags, { Terraform = true })
 }
 
 resource "aws_ecr_repository" "main" {
   count                = var.private ? 1 : 0
   name                 = var.app_name
   image_tag_mutability = var.image_tag_mutability
-  tags                 = merge(local.tags, var.tags)
+  tags                 = local.tags
   image_scanning_configuration {
     scan_on_push = var.scan_on_push
   }
@@ -25,7 +23,7 @@ resource "aws_ecr_repository" "main" {
 resource "aws_ecrpublic_repository" "main" {
   count           = var.private ? 0 : 1
   repository_name = var.app_name
-  tags            = merge(local.tags, var.tags)
+  tags            = local.tags
 }
 
 resource "aws_ecr_lifecycle_policy" "main" {

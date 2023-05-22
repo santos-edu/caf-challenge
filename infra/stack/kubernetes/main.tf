@@ -30,7 +30,7 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 }
 
 module "k3s" {
-  source = "../../modules/kubernetes"
+  source                    = "../../modules/kubernetes"
   assign_public_ip          = true
   deployment_name           = local.deployment_name
   instance_type             = "t2.micro"
@@ -40,6 +40,9 @@ module "k3s" {
   worker_node_max_count     = 5
   worker_node_desired_count = 3
   subnet_id                 = "subnet-0d19e5bc8c453031a"
+  tags = {
+    TEST-CASE = "eduardo.santos"
+  }
 }
 
 output "k3s_master_public_dns" {

@@ -86,3 +86,9 @@ variable "ami_id" {
   description = "The AMI ID to use when provisioning the instance. If left at the default null value, the latest Ubuntu server image is used."
   default     = null
 }
+
+variable "tags" {
+  type        = map(any)
+  description = "Additional tags to apply."
+  default     = {}
+}

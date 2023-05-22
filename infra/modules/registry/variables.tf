@@ -49,6 +49,7 @@ variable "tags" {
 }
 
 variable "private" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
+  description = "When true, private repositorys will be created"
 }

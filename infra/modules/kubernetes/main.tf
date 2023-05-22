@@ -1,3 +1,14 @@
+locals {
+  tags = merge(var.tags, { Terraform = true })
+  asg_tags = [
+    for item in keys(local.tags) :
+    tomap({
+      "key"   = item,
+      "value" = element(values(local.tags), index(keys(local.tags), item)),
+    })
+  ]
+}
+
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -17,12 +28,14 @@ resource "aws_key_pair" "k3s_keypair" {
   count      = var.keypair_path == "" && var.keypair_content == "" ? 0 : 1
   key_name   = var.deployment_name
   public_key = var.keypair_path == "" ? var.keypair_content : file(var.keypair_path)
+  tags       = local.tags
 }
 
 resource "aws_iam_instance_profile" "instance_profile" {
   name  = "${var.deployment_name}-InstanceProfile"
   role  = var.iam_role_name
   count = var.iam_role_name == null ? 0 : 1
+  tags  = local.tags
 }
 
 data "cloudinit_config" "userData" {
@@ -72,6 +85,7 @@ resource "aws_instance" "k3s_instance" {
   subnet_id                   = var.subnet_id == "" ? "" : var.subnet_id
   vpc_security_group_ids      = var.security_group_ids
   user_data                   = data.cloudinit_config.userData.rendered
+  tags                        = merge(local.tags, { Name = "k3s-master" })
 }
 
 output "instance" {

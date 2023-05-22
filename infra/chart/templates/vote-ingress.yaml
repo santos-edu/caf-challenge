@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "voting-app-chart.fullname" . }}-vote
+  namespace: voting-app
+  labels:
+  {{- include "voting-app-chart.labels" . | nindent 4 }}
+spec:
+  rules:
+  - host: {{ .Values.vote.ingress.host }}
+    http:
+      paths:
+      - backend:
+            service:
+              name: {{ include "voting-app-chart.fullname" . }}-vote
+              port:
+                number: {{ .Values.vote.ingress.port }}
+        path: /
+        pathType: Prefix

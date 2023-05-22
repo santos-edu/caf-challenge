@@ -35,4 +35,20 @@ resource "aws_autoscaling_group" "agent_autoscaling_group" {
     version = "$Latest"
   }
   vpc_zone_identifier = [aws_instance.k3s_instance.subnet_id]
+
+  dynamic "tag" {
+    for_each = concat(local.asg_tags,
+      [
+        {
+          "key"   = "Name"
+          "value" = "k3s-worker"
+        }
+      ]
+    )
+    content {
+      key                 = tag.value.key
+      value               = tag.value.value
+      propagate_at_launch = true
+    }
+  }
 }

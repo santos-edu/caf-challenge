@@ -1,7 +1,5 @@
 locals {
-  common_tags = {
-    Terraform = true
-  }
+  tags = merge(var.tags, { Terraform = true })
 }
 
 # VPC
@@ -9,14 +7,14 @@ resource "aws_vpc" "vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
 
-  tags = merge(local.common_tags, { Name = "iac-vpc" })
+  tags = merge(local.tags, { Name = "iac-vpc" })
 }
 
 # Subnets
 # Internet Gateway for Public Subnet
 resource "aws_internet_gateway" "ig" {
   vpc_id = aws_vpc.vpc.id
-  tags   = merge(local.common_tags, { Name = "iac-igw" })
+  tags   = merge(local.tags, { Name = "iac-igw" })
 }
 
 # Elastic-IP (eip) for NAT
@@ -29,7 +27,7 @@ resource "aws_eip" "nat_eip" {
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = element(aws_subnet.public_subnet.*.id, 0)
-  tags          = merge(local.common_tags, { Name = "iac" })
+  tags          = merge(local.tags, { Name = "iac" })
 }
 
 # Public subnet
@@ -40,8 +38,8 @@ resource "aws_subnet" "public_subnet" {
   availability_zone       = element(var.availability_zones, count.index)
   map_public_ip_on_launch = true
 
-  tags = merge(local.common_tags, { 
-    Name = "${element(var.availability_zones, count.index)}-public-subnet" 
+  tags = merge(local.tags, {
+    Name = "${element(var.availability_zones, count.index)}-public-subnet"
     Tier = "public"
   })
 }
@@ -54,7 +52,7 @@ resource "aws_subnet" "private_subnet" {
   availability_zone       = element(var.availability_zones, count.index)
   map_public_ip_on_launch = false
 
-  tags = merge(local.common_tags, { 
+  tags = merge(local.tags, {
     Name = "${element(var.availability_zones, count.index)}-private-subnet"
     Tier = "private"
   })
@@ -63,13 +61,13 @@ resource "aws_subnet" "private_subnet" {
 # Routing tables to route traffic for Public Subnet
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.vpc.id
-  tags   = merge(local.common_tags, { Name = "public-route-table" })
+  tags   = merge(local.tags, { Name = "public-route-table" })
 }
 
 # Routing tables to route traffic for Private Subnet
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.vpc.id
-  tags   = merge(local.common_tags, { Name = "private-route-table" })
+  tags   = merge(local.tags, { Name = "private-route-table" })
 }
 
 # Route for Internet Gateway

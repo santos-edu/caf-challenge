@@ -36,6 +36,9 @@ result:
       repository: dockersamples/examplevotingapp_result
       tag: latest
   type: LoadBalancer
+  ingress:
+    host: result.lab.eduardo-santos.click
+    port: 5001
 vote:
   ports:
   - name: vote-service
@@ -48,6 +51,9 @@ vote:
     image:
       repository: dockersamples/examplevotingapp_vote
       tag: latest
+  ingress:
+    host: vote.lab.eduardo-santos.click
+    port: 5000
 worker:
   replicas: 1
   worker:
